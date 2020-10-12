@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "644432599811",
+    "firebase_url": "https://mobile-education-326e7.firebaseio.com",
+    "project_id": "mobile-education-326e7",
+    "storage_bucket": "mobile-education-326e7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:644432599811:android:0031d0543634f181182736",
+        "android_client_info": {
+          "package_name": "edu.mobile.homework1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "644432599811-5bbv2sg5hv6uvklklb95k9m82epn80hp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKoQ11jpDpyuy4GvzUDOvlFCELTE9BiP8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "644432599811-5bbv2sg5hv6uvklklb95k9m82epn80hp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
