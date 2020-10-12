@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -28,15 +29,21 @@ import edu.mobile.homework1.obj.Cart;
 import edu.mobile.homework1.obj.Product;
 
 public class CartListAdapter extends BaseAdapter {
-    private ArrayList<Cart> cartArrayList;
+    private ArrayList<Cart> cartArrayList = new ArrayList<>();
     private Product product;
-    private FirebaseDatabase database;
+    private FirebaseDatabase database= FirebaseDatabase.getInstance();
     private DatabaseReference ref;
+    private int totalPrice = 0;
+    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private FirebaseUser mUser;
+    private int price;
 
-    public CartListAdapter(Context context){
-        super();
-        cartArrayList = new ArrayList<Cart>();
-        database = FirebaseDatabase.getInstance();
+    class CustomViewHolder{
+        ImageView icon_IV;
+        TextView productName_TV;
+        TextView productPrice_TV;
+        TextView productAmount_TV;
+        CheckBox checkBox;
     }
 
     @Override
@@ -45,36 +52,77 @@ public class CartListAdapter extends BaseAdapter {
         final Context context = parent.getContext();
 
         View view = convertView;
-        if(view == null){
+        final CustomViewHolder holder;
+
+        if(view == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            view = inflater.inflate(R.layout.listview_cart,parent,false);
+            view = inflater.inflate(R.layout.listview_cart, parent, false);
+            mUser = mAuth.getCurrentUser();
+            ref = database.getReference("User/").child(mUser.getUid()).child("totalPrice");
+            ref.setValue(totalPrice);
+
+            holder = new CustomViewHolder();
+            holder.icon_IV = (ImageView) view.findViewById(R.id.icon_IV);
+            holder.productAmount_TV = (TextView) view.findViewById(R.id.productAmount_TV);
+            holder.productName_TV = (TextView) view.findViewById(R.id.productName_TV);
+            holder.productPrice_TV = (TextView) view.findViewById(R.id.productPrice_TV);
+            holder.checkBox = (CheckBox) view.findViewById(R.id.checkbox);
+
+            ref = database.getReference("User/").child(mUser.getUid()).child("totalPrice");
+            ref.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    totalPrice = snapshot.getValue(int.class);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+
+            view.setTag(holder);
+
+            final Cart cart = cartArrayList.get(pos);
+            cart.setProduct(cartArrayList.get(pos).getProduct());
+            ref = database.getReference("Product/").child(cart.getProduct().getName());
+            ref.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        product = snapshot.getValue(Product.class);
+                        holder.icon_IV.setImageDrawable(ContextCompat.getDrawable(context, product.getIconId()));
+                        holder.productName_TV.setText(product.getName());
+                        holder.productPrice_TV.setText(Integer.toString(product.getPrice()) + "원");
+                        holder.productAmount_TV.setText(Integer.toString(cart.getAmount()) + "개");
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+            holder.checkBox.setChecked(cart.isChecked());
+
+            holder.checkBox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(holder.checkBox.isChecked()){
+                        cart.setChecked(true);
+                        totalPrice += cart.getProduct().getPrice() * cart.getAmount();
+                        Log.e("PRICE : ", Integer.toString(totalPrice));
+                    }
+                    else{
+                        cart.setChecked(false);
+                        totalPrice -= cart.getProduct().getPrice() * cart.getAmount();
+                        Log.e("PRICE : ", Integer.toString(totalPrice));
+                    }
+                    ref = database.getReference("User/").child(mUser.getUid()).child("Cart/").child(cart.getProduct().getName()).child("isChecked");
+                    ref.setValue(cart.isChecked());
+                    ref = database.getReference("User/").child(mUser.getUid()).child("totalPrice");
+                    ref.setValue(totalPrice);
+                }
+            });
         }
-
-        ImageView icon_IV = (ImageView) view.findViewById(R.id.icon_IV);
-        TextView productName_TV = (TextView) view.findViewById(R.id.productName_TV);
-        TextView productPrice_TV = (TextView) view.findViewById(R.id.productPrice_TV);
-        TextView productAmount_TV = (TextView) view.findViewById(R.id.productAmount_TV);
-
-        ref = database.getReference("Product/");
-        String name = cartArrayList.get(pos).getName();
-        int amount = cartArrayList.get(pos).getAmount();
-
-//        ref.child(name).addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        });
-//
-//        icon_IV.setImageDrawable(ContextCompat.getDrawable(context,product.getIconId()));
-//        productName_TV.setText(product.getName());
-//        productPrice_TV.setText(Integer.toString(product.getPrice()) + "원");
-//        productAmount_TV.setText(Integer.toString(amount));
 
         return view;
     }
@@ -85,7 +133,7 @@ public class CartListAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
+    public Cart getItem(int position) {
         return cartArrayList.get(position);
     }
 
@@ -96,6 +144,8 @@ public class CartListAdapter extends BaseAdapter {
     public void addItem(Cart cart){
         cartArrayList.add(cart);
     }
+
+
 
 
 }

@@ -42,8 +42,8 @@ public class ProductListAdapter extends BaseAdapter {
     private HashMap<String, Integer> productAmount = new HashMap<String, Integer>();
 
     private FirebaseUser mUser;
-    private FirebaseAuth mAuth;
-    private FirebaseDatabase database;
+    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private DatabaseReference ref;
 
     public ProductListAdapter(Context context){
@@ -53,14 +53,11 @@ public class ProductListAdapter extends BaseAdapter {
             productAmount.put(i+"개", i);
             arrayList.add(i+"개");
         }
-        mAuth = FirebaseAuth.getInstance();
         mUser = mAuth.getCurrentUser();
-        database = FirebaseDatabase.getInstance();
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        final int pos = position;
         final Context context = parent.getContext();
         arrayAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item,arrayList);
 
@@ -78,41 +75,22 @@ public class ProductListAdapter extends BaseAdapter {
         productAmount_Spinner.setAdapter(arrayAdapter);
         final Product product = productArrayList.get(position);
 
-        /**
-         * Todo 스피너 default 값 DB에서 읽어와서 지정하기.
-         */
-        final Map<String, Object> cart = new HashMap<>();
-        final GenericTypeIndicator<Map<String, Object>> genericTypeIndicator = new GenericTypeIndicator<Map<String, Object>>() {};
-
-        ref = database.getReference("User/").child(mUser.getUid()).child("Cart/").child(product.getName());
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                final int amount = snapshot.getValue(Integer.class);
-                new android.os.Handler().postDelayed(new Runnable() {
-                    public void run() {
-                        productAmount_Spinner.setSelection(amount);
-                    }
-                }, 100);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-
-
         icon_IV.setImageDrawable(ContextCompat.getDrawable(context,product.getIconId()));
         productName_TV.setText(product.getName());
         productPrice_TV.setText(Integer.toString(product.getPrice()) + "원");
+
 
         ref = database.getReference("User/").child(mUser.getUid()).child("Cart/");
         productAmount_Spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                cart.put(product.getName(), productAmount.get(productAmount_Spinner.getItemAtPosition(position)));
-                ref.updateChildren(cart);
+                Cart cart = new Cart(product, position);
+                cart.setChecked(false);
+                cart.setName(product.getName());
+                Map<String, Object> cartMap = cart.toMap();
+
+                ref = database.getReference("User/").child(mUser.getUid()).child("Cart/").child(product.getName());
+                ref.updateChildren(cartMap);
             }
 
             @Override
@@ -126,9 +104,10 @@ public class ProductListAdapter extends BaseAdapter {
 
     public void addItem(int iconId, String name, int price){
         Product product = new Product(iconId,name, price);
+        Map<String, Object> value = product.toMap();
 
         ref = database.getReference("Product/").child(name);
-        ref.setValue(product);
+        ref.updateChildren(value);
         productArrayList.add(product);
     }
 
