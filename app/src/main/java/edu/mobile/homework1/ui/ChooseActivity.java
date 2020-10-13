@@ -23,7 +23,7 @@ public class ChooseActivity extends AppCompatActivity {
     private FragmentManager fragmentManager;
     private ProductFragment productFragment;
     private FragmentTransaction transaction;
-    private Button buy_BTN;
+
     private Button cart_BTN;
 
     private FirebaseAuth mAuth;
@@ -35,15 +35,8 @@ public class ChooseActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        buy_BTN = (Button)findViewById(R.id.buy_BTN);
         cart_BTN = (Button)findViewById(R.id.cart_BTN);
-        buy_BTN.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                Intent intent = new Intent(this, PurchaseActivity.class);
 
-            }
-        });
         cart_BTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
